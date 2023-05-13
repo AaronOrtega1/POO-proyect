@@ -1,8 +1,8 @@
 package org.example;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class GeneradorCSV {
@@ -18,22 +18,24 @@ public class GeneradorCSV {
     }
   }
 
-  private String toCSV(String[] line){ //Recibe un arreglo de Strings y lo devuelve en formato CSV
-    String toReturn = "";
-    int i=0;
-    for(String element: line){
-      if(line.length != i-2) //Si llega al penúltimo elemento del arreglo de strings ya no se agrega coma a toReturn
-        toReturn += element + ", ";
-      else{
-        toReturn += element; //Cuando llega al último elemento del arreglo no pone coma después
+
+
+  private String toCSV(String[] line) throws IOException { //Recibe un arreglo de Strings y lo devuelve en formato CSV
+    StringBuilder sb = new StringBuilder();
+    int index = countRows();
+    sb.append(index).append(", "); // agrega un index al inicio
+    int i = 0;
+    for (String element : line) {
+      sb.append(element);
+      if (i < line.length - 1) {
+        sb.append(", ");
       }
       i++;
     }
-    return toReturn;
+    return sb.toString();
   }
 
-  public void addValues(String ... v)  { //Lanza excepción cuando el número de argumentos es diferente a los definidos en el encabezado
-    //if(v.length != encabezado.length) throw new IncorrectArgumentsExecption(v.length);
+  public void addValues(String ... v)  { //Lanza excepción cuando el número de valores es diferente a los definidos en el encabezado
     if (v.length != encabezado.length) throw new IllegalArgumentException("Número de argumentos incorrecto");
     try(FileWriter fw = new FileWriter(this.f, true)){
       fw.write(toCSV(v) + "\n");
@@ -53,14 +55,56 @@ public class GeneradorCSV {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    try (Scanner scanner = new Scanner(this.f)) {
+    try (Scanner scanner = new Scanner(this.f)) {   // Crea un objeto scanner del archivo csv
       while (scanner.hasNextLine()) {
-        sb.append(scanner.nextLine()).append("\n");
+        sb.append(scanner.nextLine()).append("\n"); // Lee la linea de scanner y la agrega al StringBuilder con un salto al final
       }
     } catch (IOException e) {
       System.out.println("Se produjo un error al leer el archivo CSV.");
     }
     return sb.toString();
   }
+
+  public void updateRow(int rowIndex, String ... v) throws IOException {
+    if (v.length != encabezado.length) throw new IllegalArgumentException("Número de argumentos incorrecto");
+    if (rowIndex == 0) throw new IllegalArgumentException("No se pueden modificar los headers");
+    List<String> rows = new ArrayList<>();
+
+    // Leer cada línea del archivo CSV y agregarla a la variable 'rows'
+    try (Scanner scanner = new Scanner(this.f)) {
+      while (scanner.hasNextLine()) {
+        rows.add(scanner.nextLine());
+      }
+    }
+
+    // Obtener la fila a actualizar y separar los valores en un arreglo de Strings
+    String[] rowToUpdate = rows.get(rowIndex).split(",");
+
+    // Reemplazar los valores existentes en el arreglo con los nuevos valores proporcionados
+    for (int i = 0; i < v.length; i++) {
+      rowToUpdate[i] = v[i];
+    }
+
+    // Actualizar la fila en la variable 'rows'
+    rows.set(rowIndex, String.join(",", rowToUpdate));
+
+    // Escribir todas las filas de la variable 'rows' al archivo CSV
+    try (FileWriter fw = new FileWriter(this.f)) {
+      for (String row : rows) {
+        fw.write(row + "\n");
+      }
+    }
+  }
+
+  public int countRows() throws IOException {
+    BufferedReader reader = new BufferedReader(new FileReader(this.f));
+    int count = 0;
+    while (reader.readLine() != null) {
+      count++;
+    }
+    reader.close();
+    return count;
+  }
+
 
 }
