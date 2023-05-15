@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class GeneradorCSV {
-  private static String[] encabezado;
-  private final File f = new File("./file.csv");
+public class GeneradorCSV{
+  private final String[] encabezado;
+  private final File f;
 
-  public GeneradorCSV(String ... header){
+  public GeneradorCSV(String fileName,String ... header){
+    this.f = new File("./" + fileName + ".csv");
     this.encabezado = header;
     try(FileWriter fw = new FileWriter(this.f);){
       fw.write(toCSV(header) + "\n");
@@ -17,8 +18,6 @@ public class GeneradorCSV {
       System.out.println("Se produjo un error");
     }
   }
-
-
 
   private String toCSV(String[] line) throws IOException { //Recibe un arreglo de Strings y lo devuelve en formato CSV
     StringBuilder sb = new StringBuilder();
@@ -86,7 +85,7 @@ public class GeneradorCSV {
     }
 
     // Actualizar la fila en la variable 'rows'
-    rows.set(rowIndex, String.join(",", rowToUpdate));
+    rows.set(rowIndex, Integer.toString(rowIndex) + "," +String.join(",", rowToUpdate));
 
     // Escribir todas las filas de la variable 'rows' al archivo CSV
     try (FileWriter fw = new FileWriter(this.f)) {
@@ -105,6 +104,5 @@ public class GeneradorCSV {
     reader.close();
     return count;
   }
-
 
 }
